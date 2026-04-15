@@ -1,0 +1,125 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX 10
+
+struct Node {
+    char name[50];
+    struct Node* children[MAX];
+    int childCount;
+};
+
+struct Node* createNode(char name[]) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    strcpy(newNode->name, name);
+    newNode->childCount = 0;
+
+    for (int i = 0; i < MAX; i++) {
+        newNode->children[i] = NULL;
+    }
+
+    return newNode;
+}
+
+struct Node* findNode(struct Node* root, char key[]) {
+    if (root == NULL) return NULL;
+
+    if (strcmp(root->name, key) == 0)
+        return root;
+
+    for (int i = 0; i < root->childCount; i++) {
+        struct Node* found = findNode(root->children[i], key);
+        if (found != NULL)
+            return found;
+    }
+    return NULL;
+}
+
+void addChild(struct Node* parent, char name[]) {
+    if (parent->childCount < MAX) {
+        parent->children[parent->childCount++] = createNode(name);
+    } else {
+        printf("Max children limit reached!\n");
+    }
+}
+
+void display(struct Node* root, int level) {
+    if (root == NULL) return;
+
+    for (int i = 0; i < level; i++)
+        printf("  ");
+    printf("- %s\n", root->name);
+
+    for (int i = 0; i < root->childCount; i++) {
+        display(root->children[i], level + 1);
+    }
+}
+
+int search(struct Node* root, char key[]) {
+    return findNode(root, key) != NULL;
+}
+
+void freeTree(struct Node* root) {
+    if (root == NULL) return;
+
+    for (int i = 0; i < root->childCount; i++) {
+        freeTree(root->children[i]);
+    }
+    free(root);
+}
+
+int main() {
+    struct Node* root = createNode("Root");
+    int choice;
+    char parent[50], child[50];
+
+    while (1) {
+        printf("\n--- MENU ---\n");
+        printf("1. Add Folder/File\n");
+        printf("2. Display Tree\n");
+        printf("3. Search\n");
+        printf("4. Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter parent name: ");
+                scanf("%s", parent);
+                printf("Enter child name: ");
+                scanf("%s", child);
+
+                struct Node* parentNode = findNode(root, parent);
+
+                if (parentNode != NULL) {
+                    addChild(parentNode, child);
+                } else {
+                    printf("Parent not found!\n");
+                }
+                break;
+
+            case 2:
+                printf("\nTree Structure:\n");
+                display(root, 0);
+                break;
+
+            case 3:
+                printf("Enter name to search: ");
+                scanf("%s", child);
+
+                if (search(root, child))
+                    printf("Found!\n");
+                else
+                    printf("Not Found!\n");
+                break;
+
+            case 4:
+                freeTree(root);
+                exit(0);
+
+            default:
+                printf("Invalid choice\n");
+        }
+    }
+}
